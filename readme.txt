@@ -1,5 +1,5 @@
 === AI Admin Boost ===
-Contributors: yourname
+Contributors: Chandrakant Kumar
 Tags: ai, admin, wordpress, openai, gemini
 Requires at least: 5.0
 Tested up to: 6.4
@@ -10,7 +10,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 An AI-powered assistant for WordPress admins with multi-model support.
 
 == Description ==
-AI Admin Boost enhances your WordPress admin experience with AI-driven tools for content ideation, SEO suggestions, and more. Supports OpenAI and Gemini (coming soon).
+AI Admin Boost enhances your WordPress admin experience with AI-driven tools for content ideation, SEO suggestions, and more. Supports OpenAI and Gemini (more coming soon).
 
 == Installation ==
 1. Upload the `ai-admin-boost` folder to the `/wp-content/plugins/` directory.
