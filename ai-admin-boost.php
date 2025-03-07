@@ -21,6 +21,8 @@ class AI_Admin_Boost {
         add_action('wp_ajax_analyze_seo_all', [$this, 'ajax_analyze_seo_all']);
         add_action('wp_ajax_analyze_seo_specific', [$this, 'ajax_analyze_seo_specific']);
         add_action('wp_ajax_run_admin_shortcut', [$this, 'ajax_run_admin_shortcut']);
+        add_action('wp_ajax_get_draft_posts', [$this, 'ajax_get_draft_posts']);
+        add_action('wp_ajax_schedule_post', [$this, 'ajax_schedule_post']);
     }
 
     public function add_admin_menu() {
@@ -155,6 +157,53 @@ class AI_Admin_Boost {
         } catch (Exception $e) {
             error_log("AJAX Run Admin Shortcut Error: " . $e->getMessage());
             wp_send_json(['success' => false, 'message' => 'Failed to run shortcut: ' . $e->getMessage()]);
+        }
+    }
+
+    public function ajax_get_draft_posts() {
+        try {
+            $args = [
+                'post_status' => 'draft',
+                'post_type' => 'post',
+                'posts_per_page' => -1,
+            ];
+            $posts = get_posts($args);
+            $draft_posts = array_map(function($post) {
+                return ['ID' => $post->ID, 'post_title' => $post->post_title];
+            }, $posts);
+            wp_send_json(['success' => true, 'posts' => $draft_posts]);
+        } catch (Exception $e) {
+            error_log("AJAX Get Draft Posts Error: " . $e->getMessage());
+            wp_send_json(['success' => false, 'message' => 'Failed to load draft posts: ' . $e->getMessage()]);
+        }
+    }
+
+    public function ajax_schedule_post() {
+        try {
+            $post_id = intval($_POST['post_id']);
+            $datetime = sanitize_text_field($_POST['datetime']);
+
+            $post = get_post($post_id);
+            if (!$post || $post->post_status !== 'draft') {
+                throw new Exception('Selected post is not a draft or does not exist.');
+            }
+
+            $updated = wp_update_post([
+                'ID' => $post_id,
+                'post_status' => 'future',
+                'post_date' => $datetime,
+                'edit_date' => true,
+            ]);
+
+            if ($updated) {
+                error_log("Post $post_id scheduled for $datetime");
+                wp_send_json(['success' => true, 'message' => "Post '$post->post_title' scheduled for $datetime with ID $post_id."]);
+            } else {
+                throw new Exception('Failed to schedule post.');
+            }
+        } catch (Exception $e) {
+            error_log("AJAX Schedule Post Error: " . $e->getMessage());
+            wp_send_json(['success' => false, 'message' => 'Failed to schedule post: ' . $e->getMessage()]);
         }
     }
 }

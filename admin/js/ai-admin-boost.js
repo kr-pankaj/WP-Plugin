@@ -9,6 +9,25 @@ jQuery(document).ready(function($) {
         return true;
     });
 
+    // Populate draft posts dropdown
+    function loadDraftPosts() {
+        $.get(ai_admin_boost.ajax_url, {
+            action: 'get_draft_posts'
+        }, function(response) {
+            const $select = $('#post_selection');
+            $select.empty(); // Clear existing options
+            $select.append('<option value="">-- Select a Post --</option>');
+            $.each(response.posts, function(index, post) {
+                $select.append(`<option value="${post.ID}">${post.post_title}</option>`);
+            });
+        }).fail(function(jqXHR) {
+            $('#task_output').text('Error loading draft posts: ' + (jqXHR.responseJSON?.message || 'Server error.'));
+        });
+    }
+
+    // Load drafts on page load
+    loadDraftPosts();
+
     $('#create_blog_post').click(function(e) {
         e.preventDefault();
         const topic = $('#blog_topic').val();
@@ -23,6 +42,7 @@ jQuery(document).ready(function($) {
         }, function(response) {
             if (response.success) {
                 $('#blog_output').text('Post created and saved as draft. View it under Posts > All Posts.');
+                loadDraftPosts(); // Refresh draft list
             } else {
                 $('#blog_output').text('Error: ' + (response.message || 'Unknown error occurred.'));
             }
@@ -71,19 +91,30 @@ jQuery(document).ready(function($) {
 
     $('#generate_task').click(function(e) {
         e.preventDefault();
-        const task = $('#task_description').val().trim();
-        if (!task) {
-            $('#task_output').text('Please enter a task description.');
+        const postId = $('#post_selection').val();
+        const datetime = $('#schedule_datetime').val();
+
+        if (!postId) {
+            $('#task_output').text('Please select a draft post.');
             return;
         }
-        $('#task_output').text('Processing...'); // Feedback during execution
+        if (!datetime) {
+            $('#task_output').text('Please select a date and time.');
+            return;
+        }
+
+        $('#task_output').text('Scheduling...'); // Feedback during execution
         $.post(ai_admin_boost.ajax_url, {
-            action: 'run_admin_shortcut',
-            shortcut: task
+            action: 'schedule_post',
+            post_id: postId,
+            datetime: datetime
         }, function(response) {
-            $('#task_output').text(response.message || response); // Display the result
+            $('#task_output').text(response.message || response);
+            if (response.success) {
+                loadDraftPosts(); // Refresh draft list after scheduling
+            }
         }).fail(function(jqXHR) {
-            $('#task_output').text('Error running task: ' + (jqXHR.responseJSON?.message || 'Server error.'));
+            $('#task_output').text('Error scheduling post: ' + (jqXHR.responseJSON?.message || 'Server error.'));
         });
     });
 
