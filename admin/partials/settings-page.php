@@ -10,7 +10,7 @@
     </form>
 
     <h2>Generate Blog Content</h2>
-    <input type="text" id="blog_topic" placeholder="Enter a keyword">
+    <input type="text" id="blog_topic" placeholder="Enter a topic">
     <button id="create_blog_post">Generate Blog Post</button>
     <div id="blog_output"></div>
 
@@ -43,9 +43,5 @@
     <input type="datetime-local" id="schedule_datetime" required>
     <button id="generate_task">Run Task</button>
     <div id="task_output"></div>
-    <?php
-        echo 'PHP Timezone: ' . date_default_timezone_get() . '<br>';
-        echo 'Current Time: ' . date('Y-m-d H:i:s T');
-        ?>
 
 </div><?php if (!defined('ABSPATH')) exit; ?>

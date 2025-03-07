@@ -54,38 +54,44 @@ jQuery(document).ready(function($) {
     $('#suggest_seo').click(function(e) {
         e.preventDefault();
         const content = $('#seo_content').val();
+        if (!content) {
+            $('#seo_output').text('Please enter content to analyze.');
+            return;
+        }
+        $('#seo_output').text('Generating SEO suggestions...');
         $.post(ai_admin_boost.ajax_url, {
             action: 'suggest_seo',
             content: content
         }, function(response) {
-            $('#seo_output').text(response);
-        }).fail(function() {
-            $('#seo_output').text('Error fetching SEO suggestions.');
-        });
-    });
-
-    $('#analyze_seo_all').click(function(e) {
-        e.preventDefault();
-        $.post(ai_admin_boost.ajax_url, {
-            action: 'analyze_seo_all'
-        }, function(response) {
-            $('#seo_analysis_output').text(response);
-        }).fail(function() {
-            $('#seo_analysis_output').text('Error analyzing pages.');
+            if (response.html) {
+                $('#seo_output').text(response.html);
+            } else {
+                $('#seo_output').text('Error: No suggestions returned.');
+            }
+        }).fail(function(jqXHR) {
+            $('#seo_output').text('Error fetching SEO suggestions: ' + (jqXHR.responseJSON?.message || 'Server error.'));
         });
     });
 
     $('#analyze_seo_specific').click(function(e) {
         e.preventDefault();
         const page_id = $('#specific_page').val();
-        if (!page_id) return alert('Please select a page.');
+        if (!page_id) {
+            alert('Please select a page.');
+            return;
+        }
+        $('#seo_analysis_output').text('Analyzing...');
         $.post(ai_admin_boost.ajax_url, {
             action: 'analyze_seo_specific',
             page_id: page_id
         }, function(response) {
-            $('#seo_analysis_output').text(response);
-        }).fail(function() {
-            $('#seo_analysis_output').text('Error analyzing page.');
+            if (response.html) {
+                $('#seo_analysis_output').text(response.html);
+            } else {
+                $('#seo_analysis_output').text('Error: No analysis returned.');
+            }
+        }).fail(function(jqXHR) {
+            $('#seo_analysis_output').text('Error analyzing page: ' + (jqXHR.responseJSON?.message || 'Server error.'));
         });
     });
 

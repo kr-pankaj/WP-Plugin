@@ -2,7 +2,7 @@
 /*
  * Plugin Name: AI Admin Boost
  * Description: An AI-powered assistant for WordPress admins with multi-model support.
- * Version: 1.0.3
+ * Version: 1.0.0
  * Author: Your Name
  * License: GPL-2.0+
  */
