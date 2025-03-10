@@ -50,6 +50,7 @@ jQuery(document).ready(function($) {
             return;
         }
         $('#blog_output').text('Generating...');
+        $(this).addClass('loading');
         $.post(ai_admin_boost.ajax_url, {
             action: 'create_blog_post',
             topic: topic
@@ -62,6 +63,8 @@ jQuery(document).ready(function($) {
             }
         }).fail(function(jqXHR) {
             $('#blog_output').text('Error creating blog post: ' + (jqXHR.responseJSON?.data?.message || 'Server error'));
+        }).always(function() {
+            $('#create_blog_post').removeClass('loading');
         });
     });
 
@@ -113,7 +116,7 @@ jQuery(document).ready(function($) {
         }
 
         $('#ai-bulk-output').text('');
-        $('#content .ai-spinner').show(); // Fixed: Removed .eq(1) since there's only one spinner
+        $(this).addClass('loading');
 
         // Process topics sequentially
         let generatedCount = 0;
@@ -122,7 +125,7 @@ jQuery(document).ready(function($) {
         function generateNextTopic(index) {
             if (index >= totalTopics) {
                 $('#ai-bulk-output').text(`All ${totalTopics} posts generated and saved as drafts. View them under Posts > All Posts.`);
-                $('#content .ai-spinner').hide();
+                $('#ai-bulk-generate').removeClass('loading');
                 loadDraftPosts(); // Refresh draft list for Automation tab
                 return;
             }
@@ -140,11 +143,11 @@ jQuery(document).ready(function($) {
                     generateNextTopic(index + 1); // Process next topic
                 } else {
                     $('#ai-bulk-output').text(`Error generating post ${index + 1}: ${response.data?.message || 'Unknown error'}`);
-                    $('#content .ai-spinner').hide();
+                    $('#ai-bulk-generate').removeClass('loading');
                 }
             }).fail(function(jqXHR) {
                 $('#ai-bulk-output').text(`Error generating post ${index + 1}: ${jqXHR.responseJSON?.data?.message || 'Server error'}`);
-                $('#content .ai-spinner').hide();
+                $('#ai-bulk-generate').removeClass('loading');
             });
         }
 
@@ -160,6 +163,7 @@ jQuery(document).ready(function($) {
             return;
         }
         $('#seo_output').text('Generating SEO suggestions...');
+        $(this).addClass('loading');
         $.post(ai_admin_boost.ajax_url, {
             action: 'suggest_seo',
             content: content
@@ -170,7 +174,9 @@ jQuery(document).ready(function($) {
                 $('#seo_output').text('Error: No suggestions returned.');
             }
         }).fail(function(jqXHR) {
-            $('#seo_output').text('Error fetching SEO suggestions: ' + (jqXHR.responseJSON?.message || 'Server error')); // Fixed syntax
+            $('#seo_output').text('Error fetching SEO suggestions: ' + (jqXHR.responseJSON?.message || 'Server error'));
+        }).always(function() {
+            $('#suggest_seo').removeClass('loading');
         });
     });
 
@@ -183,6 +189,7 @@ jQuery(document).ready(function($) {
             return;
         }
         $('#seo_analysis_output').text('Analyzing...');
+        $(this).addClass('loading');
         $.post(ai_admin_boost.ajax_url, {
             action: 'analyze_seo_specific',
             page_id: post_id
@@ -193,7 +200,9 @@ jQuery(document).ready(function($) {
                 $('#seo_analysis_output').text('Error: No analysis returned.');
             }
         }).fail(function(jqXHR) {
-            $('#seo_analysis_output').text('Error analyzing content: ' + (jqXHR.responseJSON?.message || 'Server error')); // Fixed syntax
+            $('#seo_analysis_output').text('Error analyzing content: ' + (jqXHR.responseJSON?.message || 'Server error'));
+        }).always(function() {
+            $('#analyze_seo_specific').removeClass('loading');
         });
     });
 
@@ -213,6 +222,7 @@ jQuery(document).ready(function($) {
         }
 
         $('#task_output').text('Scheduling...');
+        $(this).addClass('loading');
         $.post(ai_admin_boost.ajax_url, {
             action: 'schedule_post',
             post_id: postId,
@@ -223,7 +233,9 @@ jQuery(document).ready(function($) {
                 loadDraftPosts(); // Refresh draft list
             }
         }).fail(function(jqXHR) {
-            $('#task_output').text('Error scheduling post: ' + (jqXHR.responseJSON?.message || 'Server error')); // Fixed syntax
+            $('#task_output').text('Error scheduling post: ' + (jqXHR.responseJSON?.message || 'Server error'));
+        }).always(function() {
+            $('#generate_task').removeClass('loading');
         });
     });
 

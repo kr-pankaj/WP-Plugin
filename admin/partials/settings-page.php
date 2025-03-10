@@ -29,7 +29,7 @@
             <h3>Single Post</h3>
             <input type="text" id="blog_topic" placeholder="Enter a keyword">
             <button id="create_blog_post">Generate Blog Post</button>
-            <div class="ai-spinner" style="display: none;">Loading...</div> <!-- Added spinner -->
+            <div class="ai-spinner" style="display: none;">Loading...</div>
             <div id="blog_output"></div>
 
             <h3>Bulk Post Generation</h3>
@@ -59,7 +59,7 @@
                 <p><small>CSV should have one column with topics (e.g., "SEO Tips,WordPress Security,AI in 2025").</small></p>
                 
                 <button id="ai-bulk-generate" class="ai-generate-btn">Generate Posts</button>
-                <div class="ai-spinner" style="display: none;">Loading...</div> <!-- Ensure spinner is present -->
+                <div class="ai-spinner" style="display: none;">Loading...</div>
                 <div id="ai-bulk-output"></div>
             </div>
         </div>
@@ -69,6 +69,7 @@
             <h2>SEO Suggestions</h2>
             <textarea id="seo_content" placeholder="Paste content here"></textarea>
             <button id="suggest_seo">Get SEO Suggestions</button>
+            <div class="ai-spinner" style="display: none;">Loading...</div>
             <div id="seo_output"></div>
 
             <h2>SEO Analysis</h2>
@@ -89,6 +90,7 @@
                 ?>
             </select>
             <button id="analyze_seo_specific">Analyze Content</button>
+            <div class="ai-spinner" style="display: none;">Loading...</div>
             <div id="seo_analysis_output"></div>
         </div>
 
@@ -102,6 +104,7 @@
             <label for="schedule_datetime">Schedule Date and Time:</label>
             <input type="datetime-local" id="schedule_datetime" required>
             <button id="generate_task">Run Task</button>
+            <div class="ai-spinner" style="display: none;">Loading...</div>
             <div id="task_output"></div>
         </div>
     </div>

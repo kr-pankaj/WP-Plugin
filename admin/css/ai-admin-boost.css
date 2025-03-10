@@ -52,16 +52,21 @@
 }
 
 .ai-tab-pane button {
-    margin-bottom: 10px;
-    padding: 8px 16px;
     background: #0073aa;
     color: #fff;
     border: none;
+    padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.2s;
+    line-height: normal; /* Ensure consistent height for centering */
+    min-width: 120px; /* Ensure enough space for spinner and text */
+    text-align: center; /* Center the button text */
 }
 
-.ai-tab-pane button:hover {
+.ai-tab-pane button:hover:not(.loading) {
     background: #005d87;
 }
 
@@ -69,7 +74,7 @@
 #automation .ai-automation-form {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Space between field groups */
+    gap: 15px;
 }
 
 #automation label {
@@ -89,7 +94,7 @@
 }
 
 #automation .ai-automation-form > div {
-    margin-bottom: 15px; /* Space between each field group */
+    margin-bottom: 15px;
 }
 
 .ai-bulk-post-form {
@@ -111,32 +116,54 @@
     box-sizing: border-box;
 }
 
-.ai-add-more-btn {
-    background: #f1f1f1;
-    border: 1px solid #ccc;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-bottom: 10px;
-}
-
-.ai-add-more-btn:hover {
-    background: #e0e0e0;
-}
-
 .ai-bulk-post-form input[type="file"] {
     margin-bottom: 10px;
 }
 
-.ai-generate-btn {
-    background: #0073aa;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-.ai-generate-btn:hover {
+/* Button in loading state */
+button.loading {
+    opacity: 0.7;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px; /* Space between spinner and text */
+    min-width: 150px; /* Ensure button width remains consistent */
+    padding: 8px 16px;
+    white-space: nowrap;
+    position: relative;
+    
+    text-indent: -9999px; /* Completely hide original text */
+}
+
+/* Show spinner */
+button.loading::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border: 2px solid white;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+/* Show loading text */
+button.loading::after {
+    content: 'Loading...'; /* Replace original button text */
+    color: white;
+    font-size: 14px;
+    display: inline-block;
+    text-indent: 0; /* Ensure text appears normally */
+}
+
+.ai-generate-btn:hover:not(.loading),
+.ai-add-more-btn:hover:not(.loading) {
     background: #005d87;
 }
