@@ -26,9 +26,42 @@
         <!-- Content Generation Tab -->
         <div id="content" class="ai-tab-pane">
             <h2>Generate Blog Content</h2>
+            <h3>Single Post</h3>
             <input type="text" id="blog_topic" placeholder="Enter a keyword">
             <button id="create_blog_post">Generate Blog Post</button>
+            <div class="ai-spinner" style="display: none;">Loading...</div> <!-- Added spinner -->
             <div id="blog_output"></div>
+
+            <h3>Bulk Post Generation</h3>
+            <div class="ai-bulk-post-form">
+                <div class="ai-bulk-topics">
+                    <!-- Default 5 input fields -->
+                    <div class="ai-bulk-topic-row">
+                        <input type="text" class="ai-bulk-topic-input" placeholder="Enter topic 1">
+                    </div>
+                    <div class="ai-bulk-topic-row">
+                        <input type="text" class="ai-bulk-topic-input" placeholder="Enter topic 2">
+                    </div>
+                    <div class="ai-bulk-topic-row">
+                        <input type="text" class="ai-bulk-topic-input" placeholder="Enter topic 3">
+                    </div>
+                    <div class="ai-bulk-topic-row">
+                        <input type="text" class="ai-bulk-topic-input" placeholder="Enter topic 4">
+                    </div>
+                    <div class="ai-bulk-topic-row">
+                        <input type="text" class="ai-bulk-topic-input" placeholder="Enter topic 5">
+                    </div>
+                </div>
+                <button id="ai-bulk-add-more" class="ai-add-more-btn">Add More</button>
+                
+                <h4>Or Import CSV</h4>
+                <input type="file" id="ai-bulk-csv" accept=".csv">
+                <p><small>CSV should have one column with topics (e.g., "SEO Tips,WordPress Security,AI in 2025").</small></p>
+                
+                <button id="ai-bulk-generate" class="ai-generate-btn">Generate Posts</button>
+                <div class="ai-spinner" style="display: none;">Loading...</div> <!-- Ensure spinner is present -->
+                <div id="ai-bulk-output"></div>
+            </div>
         </div>
 
         <!-- SEO Tab -->
@@ -70,7 +103,6 @@
             <input type="datetime-local" id="schedule_datetime" required>
             <button id="generate_task">Run Task</button>
             <div id="task_output"></div>
-            
         </div>
     </div>
 </div>

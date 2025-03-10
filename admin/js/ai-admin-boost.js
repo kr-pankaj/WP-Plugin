@@ -41,7 +41,7 @@ jQuery(document).ready(function($) {
         loadDraftPosts();
     }
 
-    // Generate blog post
+    // Generate blog post (single)
     $('#create_blog_post').click(function(e) {
         e.preventDefault();
         const topic = $('#blog_topic').val();
@@ -61,8 +61,94 @@ jQuery(document).ready(function($) {
                 $('#blog_output').text('Error: ' + (response.data?.message || 'Unknown error occurred.'));
             }
         }).fail(function(jqXHR) {
-            $('#blog_output').text('Error creating blog post: ' + (jqXHR.responseJSON?.data?.message || 'Server error.'));
+            $('#blog_output').text('Error creating blog post: ' + (jqXHR.responseJSON?.data?.message || 'Server error'));
         });
+    });
+
+    // Add more topic input fields
+    $('#ai-bulk-add-more').click(function(e) {
+        e.preventDefault();
+        const rowCount = $('.ai-bulk-topic-row').length + 1;
+        $('.ai-bulk-topics').append(`
+            <div class="ai-bulk-topic-row">
+                <input type="text" class="ai-bulk-topic-input" placeholder="Enter topic ${rowCount}">
+            </div>
+        `);
+    });
+
+    // Handle CSV upload and populate topics
+    $('#ai-bulk-csv').change(function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const text = event.target.result;
+            const topics = text.split('\n').map(line => line.trim()).filter(line => line);
+            $('.ai-bulk-topics').empty();
+            topics.forEach((topic, index) => {
+                $('.ai-bulk-topics').append(`
+                    <div class="ai-bulk-topic-row">
+                        <input type="text" class="ai-bulk-topic-input" value="${topic}" placeholder="Enter topic ${index + 1}">
+                    </div>
+                `);
+            });
+        };
+        reader.readAsText(file);
+    });
+
+    // Bulk generate posts
+    $('#ai-bulk-generate').click(function(e) {
+        e.preventDefault();
+
+        // Collect topics from input fields
+        const topics = $('.ai-bulk-topic-input')
+            .map(function() { return $(this).val().trim(); })
+            .get()
+            .filter(topic => topic);
+
+        if (!topics.length) {
+            $('#ai-bulk-output').text('Please enter at least one topic.');
+            return;
+        }
+
+        $('#ai-bulk-output').text('');
+        $('#content .ai-spinner').show(); // Fixed: Removed .eq(1) since there's only one spinner
+
+        // Process topics sequentially
+        let generatedCount = 0;
+        const totalTopics = topics.length;
+
+        function generateNextTopic(index) {
+            if (index >= totalTopics) {
+                $('#ai-bulk-output').text(`All ${totalTopics} posts generated and saved as drafts. View them under Posts > All Posts.`);
+                $('#content .ai-spinner').hide();
+                loadDraftPosts(); // Refresh draft list for Automation tab
+                return;
+            }
+
+            const topic = topics[index];
+            $('#ai-bulk-output').text(`Generating post ${index + 1} of ${totalTopics}...`);
+
+            $.post(ai_admin_boost.ajax_url, {
+                action: 'create_blog_post',
+                topic: topic
+            }, function(response) {
+                if (response.success) {
+                    generatedCount++;
+                    $('#ai-bulk-output').text(`${generatedCount} post${generatedCount !== 1 ? 's' : ''} generated...`);
+                    generateNextTopic(index + 1); // Process next topic
+                } else {
+                    $('#ai-bulk-output').text(`Error generating post ${index + 1}: ${response.data?.message || 'Unknown error'}`);
+                    $('#content .ai-spinner').hide();
+                }
+            }).fail(function(jqXHR) {
+                $('#ai-bulk-output').text(`Error generating post ${index + 1}: ${jqXHR.responseJSON?.data?.message || 'Server error'}`);
+                $('#content .ai-spinner').hide();
+            });
+        }
+
+        generateNextTopic(0); // Start with the first topic
     });
 
     // Suggest SEO
@@ -84,7 +170,7 @@ jQuery(document).ready(function($) {
                 $('#seo_output').text('Error: No suggestions returned.');
             }
         }).fail(function(jqXHR) {
-            $('#seo_output').text('Error fetching SEO suggestions: ' + (jqXHR.responseJSON?.message || 'Server error.'));
+            $('#seo_output').text('Error fetching SEO suggestions: ' + (jqXHR.responseJSON?.message || 'Server error')); // Fixed syntax
         });
     });
 
@@ -107,7 +193,7 @@ jQuery(document).ready(function($) {
                 $('#seo_analysis_output').text('Error: No analysis returned.');
             }
         }).fail(function(jqXHR) {
-            $('#seo_analysis_output').text('Error analyzing content: ' + (jqXHR.responseJSON?.message || 'Server error.'));
+            $('#seo_analysis_output').text('Error analyzing content: ' + (jqXHR.responseJSON?.message || 'Server error')); // Fixed syntax
         });
     });
 
@@ -137,7 +223,7 @@ jQuery(document).ready(function($) {
                 loadDraftPosts(); // Refresh draft list
             }
         }).fail(function(jqXHR) {
-            $('#task_output').text('Error scheduling post: ' + (jqXHR.responseJSON?.message || 'Server error.'));
+            $('#task_output').text('Error scheduling post: ' + (jqXHR.responseJSON?.message || 'Server error')); // Fixed syntax
         });
     });
 

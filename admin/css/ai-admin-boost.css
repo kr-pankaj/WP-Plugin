@@ -91,3 +91,52 @@
 #automation .ai-automation-form > div {
     margin-bottom: 15px; /* Space between each field group */
 }
+
+.ai-bulk-post-form {
+    margin-top: 20px;
+}
+
+.ai-bulk-topics {
+    margin-bottom: 10px;
+}
+
+.ai-bulk-topic-row {
+    margin-bottom: 10px;
+}
+
+.ai-bulk-topic-input {
+    width: 100%;
+    max-width: 500px;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.ai-add-more-btn {
+    background: #f1f1f1;
+    border: 1px solid #ccc;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.ai-add-more-btn:hover {
+    background: #e0e0e0;
+}
+
+.ai-bulk-post-form input[type="file"] {
+    margin-bottom: 10px;
+}
+
+.ai-generate-btn {
+    background: #0073aa;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.ai-generate-btn:hover {
+    background: #005d87;
+}

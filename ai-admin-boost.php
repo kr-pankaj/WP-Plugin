@@ -109,14 +109,18 @@ class AI_Admin_Boost {
         try {
             $topic = sanitize_text_field($_POST['topic'] ?? '');
             if (empty($topic)) {
-                wp_send_json(['success' => false, 'message' => 'Topic is required.']);
+                wp_send_json_error(['message' => 'Topic is required.']);
             }
             $ideation = new AI_Content_Ideation();
             $result = $ideation->create_blog_post($topic);
-            wp_send_json($result);
+            if (isset($result['post_id'])) {
+                wp_send_json_success($result);
+            } else {
+                wp_send_json_error(['message' => $result['message']]);
+            }
         } catch (Exception $e) {
             error_log("AJAX Create Blog Post Error: " . $e->getMessage());
-            wp_send_json(['success' => false, 'message' => 'Failed to create blog post: ' . $e->getMessage()]);
+            wp_send_json_error(['message' => 'Failed to create blog post: ' . $e->getMessage()]);
         }
     }
 

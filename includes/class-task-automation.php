@@ -16,22 +16,4 @@ class AI_Task_Automation {
                 return "Shortcut not recognized. Try 'Create a category called [name]' or 'Add a [color] button', or use the scheduling form to schedule a draft post.";
         }
     }
-    public function get_draft_posts() {
-        $post_types = get_post_types(['public' => true], 'names');
-        $drafts = get_posts([
-            'post_type' => $post_types,
-            'post_status' => 'draft',
-            'posts_per_page' => -1,
-        ]);
-        $result = [];
-        foreach ($drafts as $draft) {
-            $post_type_obj = get_post_type_object($draft->post_type);
-            $result[] = [
-                'ID' => $draft->ID,
-                'post_title' => $draft->post_title ?: '(No title)',
-                'post_type' => $post_type_obj->labels->singular_name,
-            ];
-        }
-        return $result;
-    }
 }
