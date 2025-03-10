@@ -25,6 +25,8 @@ class AI_Admin_Boost {
         add_action('wp_ajax_run_admin_shortcut', [$this, 'ajax_run_admin_shortcut']);
         add_action('wp_ajax_get_draft_posts', [$this, 'ajax_get_draft_posts']);
         add_action('wp_ajax_schedule_post', [$this, 'ajax_schedule_post']);
+        add_action('wp_ajax_generate_meta_description', [$this, 'ajax_generate_meta_description']);
+        add_action('wp_ajax_analyze_content', [$this, 'ajax_analyze_content']);
     }
 
     public static function activate() {
@@ -223,6 +225,56 @@ class AI_Admin_Boost {
         } catch (Exception $e) {
             error_log("AJAX Schedule Post Error: " . $e->getMessage());
             wp_send_json(['success' => false, 'message' => 'Failed to schedule post: ' . $e->getMessage()]);
+        }
+    }
+
+    public function ajax_generate_meta_description() {
+        try {
+            $post_id = intval($_POST['post_id'] ?? 0);
+            if (!$post_id) {
+                wp_send_json_error(['message' => 'Post ID is required.']);
+            }
+
+            $post = get_post($post_id);
+            if (!$post) {
+                wp_send_json_error(['message' => 'Post not found.']);
+            }
+
+            $ideation = new AI_Content_Ideation();
+            $meta_description = $ideation->generate_meta_description($post->post_content, $post->post_title);
+
+            wp_send_json_success([
+                'meta_description' => $meta_description,
+                'message' => 'Meta description generated successfully.'
+            ]);
+        } catch (Exception $e) {
+            error_log("AJAX Generate Meta Description Error: " . $e->getMessage());
+            wp_send_json_error(['message' => 'Failed to generate meta description: ' . $e->getMessage()]);
+        }
+    }
+
+    public function ajax_analyze_content() {
+        try {
+            $post_id = intval($_POST['post_id'] ?? 0);
+            if (!$post_id) {
+                wp_send_json_error(['message' => 'Post ID is required.']);
+            }
+
+            $post = get_post($post_id);
+            if (!$post) {
+                wp_send_json_error(['message' => 'Post not found.']);
+            }
+
+            $ideation = new AI_Content_Ideation();
+            $suggestions = $ideation->analyze_content($post->post_content);
+
+            wp_send_json_success([
+                'suggestions' => $suggestions,
+                'message' => 'Content analyzed successfully.'
+            ]);
+        } catch (Exception $e) {
+            error_log("AJAX Analyze Content Error: " . $e->getMessage());
+            wp_send_json_error(['message' => 'Failed to analyze content: ' . $e->getMessage()]);
         }
     }
 }
