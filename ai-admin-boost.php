@@ -3,13 +3,15 @@
  * Plugin Name: AI Admin Boost
  * Description: An AI-powered assistant for WordPress admins with multi-model support.
  * Version: 1.0.0
- * Author: Your Name
+ * Author: Chandrakant Kumar
  * License: GPL-2.0+
  */
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+
+require_once plugin_dir_path(__FILE__) . 'includes/class-encryption.php';
 
 class AI_Admin_Boost {
     public function __construct() {
@@ -23,6 +25,10 @@ class AI_Admin_Boost {
         add_action('wp_ajax_run_admin_shortcut', [$this, 'ajax_run_admin_shortcut']);
         add_action('wp_ajax_get_draft_posts', [$this, 'ajax_get_draft_posts']);
         add_action('wp_ajax_schedule_post', [$this, 'ajax_schedule_post']);
+    }
+
+    public static function activate() {
+        AI_Admin_Boost_Encryption::generate_key_on_activation();
     }
 
     public function add_admin_menu() {
@@ -55,9 +61,11 @@ class AI_Admin_Boost {
         $options = get_option('ai_admin_boost_settings', []);
         $openai_key = $options['openai_key'] ?? '';
         $gemini_key = $options['gemini_key'] ?? '';
+        $openai_display = $openai_key;
+        $gemini_display = $gemini_key ;
         ?>
-        <label>OpenAI API Key: <input type="text" name="ai_admin_boost_settings[openai_key]" value="<?php echo esc_attr($openai_key); ?>"></label><br>
-        <label>Gemini API Key: <input type="text" name="ai_admin_boost_settings[gemini_key]" value="<?php echo esc_attr($gemini_key); ?>"></label>
+        <label>OpenAI API Key: <input type="password" name="ai_admin_boost_settings[openai_key]" value="<?php echo esc_attr($openai_display); ?>" placeholder="Enter OpenAI API Key"></label><br>
+        <label>Gemini API Key: <input type="password" name="ai_admin_boost_settings[gemini_key]" value="<?php echo esc_attr($gemini_display); ?>" placeholder="Enter Gemini API Key"></label>
         <?php
     }
 
@@ -83,8 +91,8 @@ class AI_Admin_Boost {
 
     public function sanitize_settings($input) {
         $sanitized = [];
-        $sanitized['openai_key'] = sanitize_text_field($input['openai_key'] ?? '');
-        $sanitized['gemini_key'] = sanitize_text_field($input['gemini_key'] ?? '');
+        $sanitized['openai_key'] = AI_Admin_Boost_Encryption::encrypt(sanitize_text_field($input['openai_key'] ?? ''));
+        $sanitized['gemini_key'] = AI_Admin_Boost_Encryption::encrypt(sanitize_text_field($input['gemini_key'] ?? ''));
         $sanitized['model'] = in_array($input['model'], ['openai', 'gemini']) ? $input['model'] : 'openai';
         $sanitized['max_tokens'] = max(50, min(4000, intval($input['max_tokens'] ?? 500)));
         return $sanitized;

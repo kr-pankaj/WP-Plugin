@@ -7,7 +7,7 @@ class AI_Provider {
 
     public function __construct($model, $apiKey) {
         $this->model = $model;
-        $this->apiKey = $apiKey;
+        $this->apiKey = AI_Admin_Boost_Encryption::decrypt($apiKey);
     }
 
     public function generate_text($prompt, $max_tokens = 150) {

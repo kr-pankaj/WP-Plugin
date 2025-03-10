@@ -7,7 +7,11 @@ class AI_SEO_Suggestions {
     public function __construct() {
         $options = get_option('ai_admin_boost_settings', []);
         $model = $options['model'] ?? 'openai';
-        $api_key = $options[$model . '_key'] ?? '';
+        $api_key = $options[$model . '_key'] ?? ''; // Encrypted key
+        if (empty(AI_Admin_Boost_Encryption::decrypt($api_key))) {
+            error_log("AI_SEO_Suggestions: No valid API key for model $model");
+            throw new Exception("No valid API key provided for the selected AI model.");
+        }
         $this->ai_provider = new AI_Provider($model, $api_key);
     }
 
