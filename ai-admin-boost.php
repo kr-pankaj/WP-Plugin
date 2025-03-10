@@ -173,12 +173,18 @@ class AI_Admin_Boost {
         try {
             $args = [
                 'post_status' => 'draft',
-                'post_type' => 'post',
+                'post_type' => get_post_types(['public' => true], 'names'), // Include all public post types
                 'posts_per_page' => -1,
             ];
             $posts = get_posts($args);
             $draft_posts = array_map(function($post) {
-                return ['ID' => $post->ID, 'post_title' => $post->post_title];
+                $post_type_obj = get_post_type_object($post->post_type);
+                $post_type_label = !empty($post_type_obj->labels->singular_name) ? $post_type_obj->labels->singular_name : $post->post_type; // Fallback to slug
+                return [
+                    'ID' => $post->ID,
+                    'post_title' => $post->post_title ?: '(No title)',
+                    'post_type' => $post_type_label,
+                ];
             }, $posts);
             wp_send_json(['success' => true, 'posts' => $draft_posts]);
         } catch (Exception $e) {

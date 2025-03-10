@@ -1,17 +1,93 @@
-#blog_output, #seo_output, #seo_analysis_output, #shortcut_output {
-    margin-top: 10px;
-    padding: 10px;
-    background: #f9f9f9;
-    border: 1px solid #ddd;
-    white-space: pre-wrap;
-    min-height: 20px;
+.ai-admin-boost-wrap {
+    max-width: 800px;
 }
 
-textarea {
-    margin-top: 10px;
-    padding: 10px;
-    background: #f9f9f9;
-    border: 1px solid #ddd;
-    white-space: pre-wrap;
-    min-height: 100px !important;
+.ai-tabs {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0 0;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+}
+
+.ai-tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    background: #f1f1f1;
+    margin-bottom: -1px;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+}
+
+.ai-tab.active {
+    background: #fff;
+    border-bottom: 1px solid #fff;
+}
+
+.ai-tab-pane {
+    display: none;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-top: none;
+    background: #fff;
+}
+
+.ai-tab-pane.active {
+    display: block;
+}
+
+.ai-tab-pane h2 {
+    margin-top: 0;
+}
+
+.ai-tab-pane input[type="text"],
+.ai-tab-pane textarea,
+.ai-tab-pane select {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 10px;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.ai-tab-pane button {
+    margin-bottom: 10px;
+    padding: 8px 16px;
+    background: #0073aa;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.ai-tab-pane button:hover {
+    background: #005d87;
+}
+
+/* Specific styling for Automation tab */
+#automation .ai-automation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Space between field groups */
+}
+
+#automation label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#automation select,
+#automation input[type="datetime-local"] {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#automation .ai-automation-form > div {
+    margin-bottom: 15px; /* Space between each field group */
 }
