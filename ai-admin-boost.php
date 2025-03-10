@@ -145,14 +145,15 @@ class AI_Admin_Boost {
 
     public function ajax_analyze_seo_specific() {
         try {
-            $page_id = intval($_POST['page_id']);
-            error_log("AJAX Analyze SEO Specific: Page ID = " . $page_id);
+            $post_id = intval($_POST['page_id']);
+            $post = get_post($post_id);
+            error_log("AJAX Analyze SEO Specific: Post ID = $post_id, Type = " . ($post ? $post->post_type : 'Not found'));
             $seo = new AI_SEO_Suggestions();
-            $response = $seo->analyze_seo_specific($page_id);
+            $response = $seo->analyze_seo_specific($post_id);
             wp_send_json(['html' => $response]);
         } catch (Exception $e) {
             error_log("AJAX Analyze SEO Specific Error: " . $e->getMessage());
-            wp_send_json_error(['message' => 'Failed to analyze page: ' . $e->getMessage()]);
+            wp_send_json_error(['message' => 'Failed to analyze content: ' . $e->getMessage()]);
         }
     }
 
@@ -215,7 +216,7 @@ class AI_Admin_Boost {
         }
     }
 }
-
+register_activation_hook(__FILE__, ['AI_Admin_Boost', 'activate']);
 new AI_Admin_Boost();
 
 require_once plugin_dir_path(__FILE__) . 'includes/class-ai-provider.php';

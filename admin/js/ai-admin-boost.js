@@ -25,9 +25,12 @@ jQuery(document).ready(function($) {
         });
     }
 
-    // Load drafts on page load
-    loadDraftPosts();
+    // Load drafts on page load for settings page
+    if ($('#post_selection').length) {
+        loadDraftPosts();
+    }
 
+    // Settings page: Generate blog post
     $('#create_blog_post').click(function(e) {
         e.preventDefault();
         const topic = $('#blog_topic').val();
@@ -44,13 +47,14 @@ jQuery(document).ready(function($) {
                 $('#blog_output').text('Post created and saved as draft. View it under Posts > All Posts.');
                 loadDraftPosts(); // Refresh draft list
             } else {
-                $('#blog_output').text('Error: ' + (response.message || 'Unknown error occurred.'));
+                $('#blog_output').text('Error: ' + (response.data?.message || 'Unknown error occurred.'));
             }
         }).fail(function(jqXHR) {
-            $('#blog_output').text('Error creating blog post: ' + (jqXHR.responseJSON?.message || 'Server error.'));
+            $('#blog_output').text('Error creating blog post: ' + (jqXHR.responseJSON?.data?.message || 'Server error.'));
         });
     });
 
+    // Settings page: Suggest SEO
     $('#suggest_seo').click(function(e) {
         e.preventDefault();
         const content = $('#seo_content').val();
@@ -73,17 +77,18 @@ jQuery(document).ready(function($) {
         });
     });
 
+    // Settings page: Analyze SEO specific
     $('#analyze_seo_specific').click(function(e) {
         e.preventDefault();
-        const page_id = $('#specific_page').val();
-        if (!page_id) {
-            alert('Please select a page.');
+        const post_id = $('#specific_page').val();
+        if (!post_id) {
+            alert('Please select a page or post.');
             return;
         }
         $('#seo_analysis_output').text('Analyzing...');
         $.post(ai_admin_boost.ajax_url, {
             action: 'analyze_seo_specific',
-            page_id: page_id
+            page_id: post_id
         }, function(response) {
             if (response.html) {
                 $('#seo_analysis_output').text(response.html);
@@ -91,10 +96,11 @@ jQuery(document).ready(function($) {
                 $('#seo_analysis_output').text('Error: No analysis returned.');
             }
         }).fail(function(jqXHR) {
-            $('#seo_analysis_output').text('Error analyzing page: ' + (jqXHR.responseJSON?.message || 'Server error.'));
+            $('#seo_analysis_output').text('Error analyzing content: ' + (jqXHR.responseJSON?.message || 'Server error.'));
         });
     });
 
+    // Settings page: Schedule post
     $('#generate_task').click(function(e) {
         e.preventDefault();
         const postId = $('#post_selection').val();
@@ -109,7 +115,7 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        $('#task_output').text('Scheduling...'); // Feedback during execution
+        $('#task_output').text('Scheduling...');
         $.post(ai_admin_boost.ajax_url, {
             action: 'schedule_post',
             post_id: postId,
@@ -117,13 +123,14 @@ jQuery(document).ready(function($) {
         }, function(response) {
             $('#task_output').text(response.message || response);
             if (response.success) {
-                loadDraftPosts(); // Refresh draft list after scheduling
+                loadDraftPosts(); // Refresh draft list
             }
         }).fail(function(jqXHR) {
             $('#task_output').text('Error scheduling post: ' + (jqXHR.responseJSON?.message || 'Server error.'));
         });
     });
 
+    // Settings page: Run admin shortcut (if applicable)
     $('#run_admin_shortcut').click(function(e) {
         e.preventDefault();
         const shortcut = $('#admin_shortcut').val();
@@ -136,4 +143,62 @@ jQuery(document).ready(function($) {
             $('#shortcut_output').text('Error running shortcut.');
         });
     });
+
+    // Post/Page Editor: Generate full content
+    if ($('#ai_content_topic').length) {
+        $('#ai_generate_full').click(function(e) {
+            e.preventDefault();
+            const topic = $('#ai_content_topic').val();
+            const post_id = $('#post_ID').val();
+            if (!topic) {
+                $('#ai_content_output').text('Please enter a topic.');
+                return;
+            }
+            $('#ai_content_output').text('Generating full content...');
+            $.post(ai_admin_boost.ajax_url, {
+                action: 'generate_full_content',
+                topic: topic,
+                post_id: post_id,
+                nonce: $('#ai_admin_boost_nonce').val()
+            }, function(response) {
+                if (response.success) {
+                    $('#title').val(response.data.title); // Update title field
+                    wp.data.dispatch('core/editor').editPost({ content: response.data.content }); // Update Gutenberg editor
+                    $('#ai_content_output').text('Full content generated and applied.');
+                } else {
+                    $('#ai_content_output').text('Error: ' + (response.data.message || 'Unknown error.'));
+                }
+            }).fail(function(jqXHR) {
+                $('#ai_content_output').text('Error generating content: ' + (jqXHR.responseJSON?.data?.message || 'Server error.'));
+            });
+        });
+
+        // Post/Page Editor: Generate section content
+        $('#ai_generate_section').click(function(e) {
+            e.preventDefault();
+            const topic = $('#ai_content_topic').val();
+            const post_id = $('#post_ID').val();
+            if (!topic) {
+                $('#ai_content_output').text('Please enter a topic.');
+                return;
+            }
+            $('#ai_content_output').text('Generating section...');
+            $.post(ai_admin_boost.ajax_url, {
+                action: 'generate_section_content',
+                topic: topic,
+                post_id: post_id,
+                nonce: $('#ai_admin_boost_nonce').val()
+            }, function(response) {
+                if (response.success) {
+                    const currentContent = wp.data.select('core/editor').getEditedPostAttribute('content');
+                    wp.data.dispatch('core/editor').editPost({ content: currentContent + '\n\n' + response.data.content });
+                    $('#ai_content_output').text('Section added to content.');
+                } else {
+                    $('#ai_content_output').text('Error: ' + (response.data.message || 'Unknown error.'));
+                }
+            }).fail(function(jqXHR) {
+                $('#ai_content_output').text('Error generating section: ' + (jqXHR.responseJSON?.data?.message || 'Server error.'));
+            });
+        });
+    }
 });
