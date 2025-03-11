@@ -97,13 +97,20 @@
         <!-- Automation Tab -->
         <div id="automation" class="ai-tab-pane">
             <h2>Task Automation</h2>
-            <label for="post_selection">Select a Draft to Schedule:</label>
-            <select id="post_selection">
-                <option value="">-- Select Content --</option>
-            </select>
-            <label for="schedule_datetime">Schedule Date and Time:</label>
-            <input type="datetime-local" id="schedule_datetime" required>
-            <button id="generate_task">Run Task</button>
+            <div class="ai-schedule-posts">
+                <!-- Default 1 scheduling field group -->
+                <div class="ai-schedule-post-row" data-row-id="1">
+                    <label for="post_selection_1">Select a Draft to Schedule:</label>
+                    <select class="post_selection" name="post_selection[]">
+                        <option value="">-- Select Content --</option>
+                    </select>
+                    <label for="schedule_datetime_1">Schedule Date and Time:</label>
+                    <input type="datetime-local" class="schedule_datetime" name="schedule_datetime[]" required>
+                    <button class="ai-remove-row hidden" data-row-id="1">Remove</button>
+                </div>
+            </div>
+            <button id="ai-schedule-add-more" class="ai-add-more-btn">Add More</button>
+            <button id="generate_task">Schedule Posts</button>
             <div class="ai-spinner" style="display: none;">Loading...</div>
             <div id="task_output"></div>
         </div>

@@ -20,25 +20,111 @@ jQuery(document).ready(function($) {
         $.get(ai_admin_boost.ajax_url, {
             action: 'get_draft_posts'
         }, function(response) {
-            const $select = $('#post_selection');
-            $select.empty();
-            $select.append('<option value="">-- Select Content --</option>');
-            if (response.success) {
-                $.each(response.posts, function(index, post) {
-                    const postType = post.post_type || 'Unknown'; // Fallback if post_type is missing
-                    $select.append(`<option value="${post.ID}">[${postType}] ${post.post_title || '(No title)'}</option>`);
-                });
-            } else {
-                $('#task_output').text('Error loading draft posts: ' + (response.message || 'Unknown error'));
-            }
+            const $selects = $('.post_selection');
+            $selects.each(function() {
+                const $select = $(this);
+                const currentValue = $select.val(); // Preserve selected value if any
+                $select.empty();
+                $select.append('<option value="">-- Select Content --</option>');
+                if (response.success) {
+                    $.each(response.posts, function(index, post) {
+                        const postType = post.post_type || 'Unknown';
+                        $select.append(`<option value="${post.ID}">[${postType}] ${post.post_title || '(No title)'}</option>`);
+                    });
+                    // Restore the selected value if it still exists
+                    if (currentValue) {
+                        $select.val(currentValue);
+                    }
+                } else {
+                    $('#task_output').html('<div>Error loading draft posts: ' + (response.message || 'Unknown error') + '</div>');
+                }
+            });
         }).fail(function(jqXHR) {
-            $('#task_output').text('Error loading draft posts: ' + (jqXHR.responseJSON?.message || 'Server error'));
+            $('#task_output').html('<div>Error loading draft posts: ' + (jqXHR.responseJSON?.message || 'Server error') + '</div>');
         });
     }
 
     // Load drafts when Automation tab is active
-    if ($('#post_selection').length) {
+    if ($('.post_selection').length) {
         loadDraftPosts();
+    }
+
+    // Function to toggle visibility of Remove buttons
+    function toggleRemoveButtons() {
+        const rowCount = $('.ai-schedule-post-row').length;
+        if (rowCount > 1) {
+            $('.ai-remove-row').removeClass('hidden');
+        } else {
+            $('.ai-remove-row').addClass('hidden');
+        }
+    }
+
+    // Add more scheduling rows
+    $('#ai-schedule-add-more').click(function(e) {
+        e.preventDefault();
+        const rowCount = $('.ai-schedule-post-row').length + 1;
+        $('.ai-schedule-posts').append(`
+            <div class="ai-schedule-post-row" data-row-id="${rowCount}">
+                <label for="post_selection_${rowCount}">Select a Draft to Schedule:</label>
+                <select class="post_selection" name="post_selection[]">
+                    <option value="">-- Select Content --</option>
+                </select>
+                <label for="schedule_datetime_${rowCount}">Schedule Date and Time:</label>
+                <input type="datetime-local" class="schedule_datetime" name="schedule_datetime[]" required>
+                <button class="ai-remove-row" data-row-id="${rowCount}">Remove</button>
+            </div>
+        `);
+        // Populate the new dropdown with draft posts
+        loadDraftPosts();
+        // Toggle Remove buttons visibility
+        toggleRemoveButtons();
+    });
+
+    // Remove a scheduling row
+    $(document).on('click', '.ai-remove-row', function(e) {
+        e.preventDefault();
+        const $row = $(this).closest('.ai-schedule-post-row');
+        const rowId = $row.data('row-id');
+        
+        // Confirm removal (optional, can be removed for simplicity)
+        if (confirm('Are you sure you want to remove this row?')) {
+            $row.remove();
+            
+            // Re-index remaining rows (optional, for cosmetic consistency)
+            $('.ai-schedule-post-row').each(function(index) {
+                const newIndex = index + 1;
+                $(this).attr('data-row-id', newIndex);
+                $(this).find('label[for="post_selection_' + (index + 1) + '"]').attr('for', 'post_selection_' + newIndex);
+                $(this).find('label[for="schedule_datetime_' + (index + 1) + '"]').attr('for', 'schedule_datetime_' + newIndex);
+                $(this).find('.post_selection').attr('id', 'post_selection_' + newIndex).attr('name', 'post_selection[]');
+                $(this).find('.schedule_datetime').attr('id', 'schedule_datetime_' + newIndex).attr('name', 'schedule_datetime[]');
+                $(this).find('.ai-remove-row').attr('data-row-id', newIndex).text('Remove');
+            });
+
+            // Toggle Remove buttons visibility
+            toggleRemoveButtons();
+        }
+    });
+
+    // Reset the scheduling form to its initial state
+    function resetScheduleForm() {
+        // Keep only the first row
+        $('.ai-schedule-post-row').slice(1).remove();
+        
+        // Reset the first row
+        const $firstRow = $('.ai-schedule-post-row').first();
+        $firstRow.attr('data-row-id', '1');
+        $firstRow.find('label[for="post_selection_1"]').attr('for', 'post_selection_1');
+        $firstRow.find('label[for="schedule_datetime_1"]').attr('for', 'schedule_datetime_1');
+        $firstRow.find('.post_selection').attr('id', 'post_selection_1').attr('name', 'post_selection[]').val('');
+        $firstRow.find('.schedule_datetime').attr('id', 'schedule_datetime_1').attr('name', 'schedule_datetime[]').val('');
+        $firstRow.find('.ai-remove-row').attr('data-row-id', '1').text('Remove');
+
+        // Re-populate the dropdown
+        loadDraftPosts();
+
+        // Toggle Remove buttons visibility
+        toggleRemoveButtons();
     }
 
     // Generate blog post (single)
@@ -104,7 +190,6 @@ jQuery(document).ready(function($) {
     $('#ai-bulk-generate').click(function(e) {
         e.preventDefault();
 
-        // Collect topics from input fields
         const topics = $('.ai-bulk-topic-input')
             .map(function() { return $(this).val().trim(); })
             .get()
@@ -118,7 +203,6 @@ jQuery(document).ready(function($) {
         $('#ai-bulk-output').text('');
         $(this).addClass('loading');
 
-        // Process topics sequentially
         let generatedCount = 0;
         const totalTopics = topics.length;
 
@@ -126,7 +210,7 @@ jQuery(document).ready(function($) {
             if (index >= totalTopics) {
                 $('#ai-bulk-output').text(`All ${totalTopics} posts generated and saved as drafts. View them under Posts > All Posts.`);
                 $('#ai-bulk-generate').removeClass('loading');
-                loadDraftPosts(); // Refresh draft list for Automation tab
+                loadDraftPosts();
                 return;
             }
 
@@ -140,7 +224,7 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     generatedCount++;
                     $('#ai-bulk-output').text(`${generatedCount} post${generatedCount !== 1 ? 's' : ''} generated...`);
-                    generateNextTopic(index + 1); // Process next topic
+                    generateNextTopic(index + 1);
                 } else {
                     $('#ai-bulk-output').text(`Error generating post ${index + 1}: ${response.data?.message || 'Unknown error'}`);
                     $('#ai-bulk-generate').removeClass('loading');
@@ -151,7 +235,7 @@ jQuery(document).ready(function($) {
             });
         }
 
-        generateNextTopic(0); // Start with the first topic
+        generateNextTopic(0);
     });
 
     // Suggest SEO
@@ -206,34 +290,84 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // Schedule post
+    // Schedule multiple posts
     $('#generate_task').click(function(e) {
         e.preventDefault();
-        const postId = $('#post_selection').val();
-        const datetime = $('#schedule_datetime').val();
 
-        if (!postId) {
-            $('#task_output').text('Please select draft content.');
+        // Collect all post IDs and datetimes
+        const schedules = [];
+        let hasError = false;
+
+        // Check for duplicate posts
+        const selectedPosts = $('.post_selection')
+            .map(function() { return $(this).val(); })
+            .get()
+            .filter(val => val); // Filter out empty values
+
+        const duplicates = selectedPosts.filter((item, index) => selectedPosts.indexOf(item) !== index);
+        if (duplicates.length > 0) {
+            // Find the titles of duplicate posts for the error message
+            const duplicateTitles = [];
+            const postTitles = {};
+            $('.post_selection').each(function() {
+                const postId = $(this).val();
+                if (postId && duplicates.includes(postId)) {
+                    const title = $(this).find('option:selected').text();
+                    if (!duplicateTitles.includes(title)) {
+                        duplicateTitles.push(title);
+                    }
+                }
+            });
+            $('#task_output').html(`<div>Error: You have selected the same post(s) multiple times: ${duplicateTitles.join(', ')}. Please select unique posts for each row.</div>`);
             return;
         }
-        if (!datetime) {
-            $('#task_output').text('Please select a date and time.');
+
+        $('.ai-schedule-post-row').each(function(index) {
+            const postId = $(this).find('.post_selection').val();
+            const datetime = $(this).find('.schedule_datetime').val();
+
+            if (!postId) {
+                $('#task_output').html(`<div>Please select draft content for row ${index + 1}.</div>`);
+                hasError = true;
+                return false; // Exit loop
+            }
+            if (!datetime) {
+                $('#task_output').html(`<div>Please select a date and time for row ${index + 1}.</div>`);
+                hasError = true;
+                return false; // Exit loop
+            }
+
+            schedules.push({ post_id: postId, datetime: datetime });
+        });
+
+        if (hasError || schedules.length === 0) {
             return;
         }
 
-        $('#task_output').text('Scheduling...');
+        $('#task_output').text('Scheduling posts...');
         $(this).addClass('loading');
+
         $.post(ai_admin_boost.ajax_url, {
             action: 'schedule_post',
-            post_id: postId,
-            datetime: datetime
+            schedules: schedules
         }, function(response) {
-            $('#task_output').text(response.message || response);
             if (response.success) {
+                let output = '';
+                $.each(response.results, function(index, result) {
+                    if (result.success) {
+                        output += `<div>Post ${result.post_title} scheduled for ${result.datetime} with ID ${result.post_id}.</div>`;
+                    } else {
+                        output += `<div>Error scheduling post ID ${result.post_id}: ${result.message}</div>`;
+                    }
+                });
+                $('#task_output').html(output);
                 loadDraftPosts(); // Refresh draft list
+                resetScheduleForm(); // Reset the form after successful scheduling
+            } else {
+                $('#task_output').text('Error: ' + (response.message || 'Unknown error occurred.'));
             }
         }).fail(function(jqXHR) {
-            $('#task_output').text('Error scheduling post: ' + (jqXHR.responseJSON?.message || 'Server error'));
+            $('#task_output').text('Error scheduling posts: ' + (jqXHR.responseJSON?.message || 'Server error'));
         }).always(function() {
             $('#generate_task').removeClass('loading');
         });

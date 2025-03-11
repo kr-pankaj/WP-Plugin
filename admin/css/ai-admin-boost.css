@@ -61,9 +61,9 @@
     position: relative;
     overflow: hidden;
     transition: opacity 0.2s;
-    line-height: normal; /* Ensure consistent height for centering */
-    min-width: 120px; /* Ensure enough space for spinner and text */
-    text-align: center; /* Center the button text */
+    line-height: normal;
+    min-width: 120px;
+    text-align: center;
 }
 
 .ai-tab-pane button:hover:not(.loading) {
@@ -120,6 +120,62 @@
     margin-bottom: 10px;
 }
 
+.ai-schedule-posts {
+    margin-bottom: 10px;
+}
+
+.ai-schedule-post-row {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    background: #f9f9f9;
+    position: relative;
+}
+
+.ai-schedule-post-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.ai-schedule-post-row select,
+.ai-schedule-post-row input[type="datetime-local"] {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.ai-remove-row {
+    background: #dc3232;
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.ai-remove-row:hover {
+    background: #a00;
+}
+
+.ai-remove-row.hidden {
+    display: none;
+}
+
+/* Style for task output */
+#task_output div {
+    margin-bottom: 10px;
+    padding: 5px;
+    border-left: 4px solid #0073aa;
+    background: #f1f1f1;
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);
@@ -133,13 +189,13 @@ button.loading {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px; /* Space between spinner and text */
-    min-width: 150px; /* Ensure button width remains consistent */
+    gap: 6px;
+    min-width: 150px;
     padding: 8px 16px;
     white-space: nowrap;
     position: relative;
     
-    text-indent: -9999px; /* Completely hide original text */
+    text-indent: -9999px;
 }
 
 /* Show spinner */
@@ -156,11 +212,11 @@ button.loading::before {
 
 /* Show loading text */
 button.loading::after {
-    content: 'Loading...'; /* Replace original button text */
+    content: 'Loading...';
     color: white;
     font-size: 14px;
     display: inline-block;
-    text-indent: 0; /* Ensure text appears normally */
+    text-indent: 0;
 }
 
 .ai-generate-btn:hover:not(.loading),

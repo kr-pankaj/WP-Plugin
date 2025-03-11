@@ -64,7 +64,7 @@ class AI_Admin_Boost {
         $openai_key = $options['openai_key'] ?? '';
         $gemini_key = $options['gemini_key'] ?? '';
         $openai_display = $openai_key;
-        $gemini_display = $gemini_key ;
+        $gemini_display = $gemini_key;
         ?>
         <label>OpenAI API Key: <input type="password" name="ai_admin_boost_settings[openai_key]" value="<?php echo esc_attr($openai_display); ?>" placeholder="Enter OpenAI API Key"></label><br>
         <label>Gemini API Key: <input type="password" name="ai_admin_boost_settings[gemini_key]" value="<?php echo esc_attr($gemini_display); ?>" placeholder="Enter Gemini API Key"></label>
@@ -179,13 +179,13 @@ class AI_Admin_Boost {
         try {
             $args = [
                 'post_status' => 'draft',
-                'post_type' => get_post_types(['public' => true], 'names'), // Include all public post types
+                'post_type' => get_post_types(['public' => true], 'names'),
                 'posts_per_page' => -1,
             ];
             $posts = get_posts($args);
             $draft_posts = array_map(function($post) {
                 $post_type_obj = get_post_type_object($post->post_type);
-                $post_type_label = !empty($post_type_obj->labels->singular_name) ? $post_type_obj->labels->singular_name : $post->post_type; // Fallback to slug
+                $post_type_label = !empty($post_type_obj->labels->singular_name) ? $post_type_obj->labels->singular_name : $post->post_type;
                 return [
                     'ID' => $post->ID,
                     'post_title' => $post->post_title ?: '(No title)',
@@ -201,30 +201,87 @@ class AI_Admin_Boost {
 
     public function ajax_schedule_post() {
         try {
-            $post_id = intval($_POST['post_id']);
-            $datetime = sanitize_text_field($_POST['datetime']);
+            // Check if schedules array is provided (for multiple posts)
+            if (isset($_POST['schedules']) && is_array($_POST['schedules'])) {
+                $schedules = $_POST['schedules'];
+                $results = [];
 
-            $post = get_post($post_id);
-            if (!$post || $post->post_status !== 'draft') {
-                throw new Exception('Selected post is not a draft or does not exist.');
-            }
+                foreach ($schedules as $index => $schedule) {
+                    $post_id = intval($schedule['post_id'] ?? 0);
+                    $datetime = sanitize_text_field($schedule['datetime'] ?? '');
 
-            $updated = wp_update_post([
-                'ID' => $post_id,
-                'post_status' => 'future',
-                'post_date' => $datetime,
-                'edit_date' => true,
-            ]);
+                    if (!$post_id || !$datetime) {
+                        $results[] = [
+                            'post_id' => $post_id,
+                            'success' => false,
+                            'message' => "Invalid post ID or datetime for schedule #$index."
+                        ];
+                        continue;
+                    }
 
-            if ($updated) {
-                error_log("Post $post_id scheduled for $datetime");
-                wp_send_json(['success' => true, 'message' => "Post '$post->post_title' scheduled for $datetime with ID $post_id."]);
+                    $post = get_post($post_id);
+                    if (!$post || $post->post_status !== 'draft') {
+                        $results[] = [
+                            'post_id' => $post_id,
+                            'success' => false,
+                            'message' => "Post #$post_id is not a draft or does not exist."
+                        ];
+                        continue;
+                    }
+
+                    $updated = wp_update_post([
+                        'ID' => $post_id,
+                        'post_status' => 'future',
+                        'post_date' => $datetime,
+                        'edit_date' => true,
+                    ]);
+
+                    if ($updated) {
+                        error_log("Post $post_id scheduled for $datetime");
+                        $results[] = [
+                            'post_id' => $post_id,
+                            'post_title' => $post->post_title,
+                            'datetime' => $datetime,
+                            'success' => true,
+                            'message' => "Post '$post->post_title' scheduled for $datetime."
+                        ];
+                    } else {
+                        $results[] = [
+                            'post_id' => $post_id,
+                            'success' => false,
+                            'message' => "Failed to schedule post #$post_id."
+                        ];
+                    }
+                }
+
+                wp_send_json(['success' => true, 'results' => $results]);
             } else {
-                throw new Exception('Failed to schedule post.');
+                // Fallback for single post (backward compatibility)
+                $post_id = intval($_POST['post_id']);
+                $datetime = sanitize_text_field($_POST['datetime']);
+
+                $post = get_post($post_id);
+                if (!$post || $post->post_status !== 'draft') {
+                    throw new Exception('Selected post is not a draft or does not exist.');
+                }
+
+                $updated = wp_update_post([
+                    'ID' => $post_id,
+                    'post_status' => 'future',
+                    'post_date' => $datetime,
+                    'edit_date' => true,
+                ]);
+
+                if ($updated) {
+                    error_log("Post $post_id scheduled for $datetime");
+                    wp_send_json(['success' => true, 'message' => "Post '$post->post_title' scheduled for $datetime with ID $post_id."]);
+                } else {
+                    throw new Exception('Failed to schedule post.');
+                }
             }
         } catch (Exception $e) {
             error_log("AJAX Schedule Post Error: " . $e->getMessage());
-            wp_send_json(['success' => false, 'message' => 'Failed to schedule post: ' . $e->getMessage()]);
+            wp_send_json(['success' => false, 'message' => 'Failed to schedule post(s): ' . $e->getMessage()]);
         }
     }
 
