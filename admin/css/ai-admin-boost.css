@@ -70,7 +70,6 @@
     background: #005d87;
 }
 
-/* Specific styling for Automation tab */
 #automation .ai-automation-form {
     display: flex;
     flex-direction: column;
@@ -168,12 +167,74 @@
     display: none;
 }
 
-/* Style for task output */
 #task_output div {
     margin-bottom: 10px;
     padding: 5px;
     border-left: 4px solid #0073aa;
     background: #f1f1f1;
+}
+
+.confirmation-message {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.confirmation-message.show {
+    display: block;
+}
+
+.ai-tab-pane [title]:hover:after {
+    content: attr(title);
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+    white-space: nowrap;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 5px;
+}
+
+.ai-tab-pane [title]:hover:before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+}
+
+#bulk_edit_section {
+    margin-top: 20px;
+}
+
+#scheduled_posts_list ul {
+    list-style: none;
+    padding: 0;
+}
+
+#scheduled_posts_list li {
+    margin-bottom: 10px;
+    padding: 5px;
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+}
+
+#scheduled_posts_list li input[type="checkbox"] {
+    margin-right: 10px;
 }
 
 @keyframes spin {
@@ -182,7 +243,6 @@
     }
 }
 
-/* Button in loading state */
 button.loading {
     opacity: 0.7;
     pointer-events: none;
@@ -194,11 +254,9 @@ button.loading {
     padding: 8px 16px;
     white-space: nowrap;
     position: relative;
-    
     text-indent: -9999px;
 }
 
-/* Show spinner */
 button.loading::before {
     content: '';
     width: 14px;
@@ -210,7 +268,6 @@ button.loading::before {
     display: inline-block;
 }
 
-/* Show loading text */
 button.loading::after {
     content: 'Loading...';
     color: white;
@@ -222,4 +279,52 @@ button.loading::after {
 .ai-generate-btn:hover:not(.loading),
 .ai-add-more-btn:hover:not(.loading) {
     background: #005d87;
+}
+
+.ai-scheduled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.ai-scheduled-table th,
+.ai-scheduled-table td {
+    padding: 8px;
+    border: 1px solid #e5e5e5;
+    text-align: left;
+}
+
+.ai-scheduled-table th {
+    background: #f1f1f1;
+    font-weight: bold;
+}
+
+.ai-scheduled-table td {
+    background: #f9f9f9;
+}
+
+.ai-scheduled-table input[type="checkbox"] {
+    margin: 0;
+}
+
+.ai-scheduled-table input[type="datetime-local"] {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.ai-pagination-controls {
+    margin-bottom: 10px;
+}
+
+.ai-pagination-controls label {
+    margin-right: 10px;
+}
+
+.ai-pagination-controls select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }

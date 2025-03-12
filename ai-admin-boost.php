@@ -8,7 +8,7 @@
  */
 
 if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
+    exit;
 }
 
 require_once plugin_dir_path(__FILE__) . 'includes/class-encryption.php';
@@ -27,6 +27,8 @@ class AI_Admin_Boost {
         add_action('wp_ajax_schedule_post', [$this, 'ajax_schedule_post']);
         add_action('wp_ajax_generate_meta_description', [$this, 'ajax_generate_meta_description']);
         add_action('wp_ajax_analyze_content', [$this, 'ajax_analyze_content']);
+        add_action('wp_ajax_get_scheduled_posts', [$this, 'ajax_get_scheduled_posts']);
+        add_action('wp_ajax_bulk_update_post_dates', [$this, 'ajax_bulk_update_post_dates']);
     }
 
     public static function activate() {
@@ -104,10 +106,14 @@ class AI_Admin_Boost {
         if ($hook !== 'toplevel_page_ai-admin-boost') return;
         wp_enqueue_style('ai-admin-boost', plugin_dir_url(__FILE__) . 'admin/css/ai-admin-boost.css');
         wp_enqueue_script('ai-admin-boost', plugin_dir_url(__FILE__) . 'admin/js/ai-admin-boost.js', ['jquery'], null, true);
-        wp_localize_script('ai-admin-boost', 'ai_admin_boost', ['ajax_url' => admin_url('admin-ajax.php')]);
+        wp_localize_script('ai-admin-boost', 'ai_admin_boost', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ai_admin_boost_nonce'),
+        ]);
     }
 
     public function ajax_create_blog_post() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $topic = sanitize_text_field($_POST['topic'] ?? '');
             if (empty($topic)) {
@@ -127,6 +133,7 @@ class AI_Admin_Boost {
     }
 
     public function ajax_suggest_seo() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $content = sanitize_textarea_field($_POST['content']);
             $seo = new AI_SEO_Suggestions();
@@ -139,6 +146,7 @@ class AI_Admin_Boost {
     }
 
     public function ajax_analyze_seo_all() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $seo = new AI_SEO_Suggestions();
             $response = $seo->analyze_seo_all();
@@ -150,6 +158,7 @@ class AI_Admin_Boost {
     }
 
     public function ajax_analyze_seo_specific() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $post_id = intval($_POST['page_id']);
             $post = get_post($post_id);
@@ -164,6 +173,7 @@ class AI_Admin_Boost {
     }
 
     public function ajax_run_admin_shortcut() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $shortcut = sanitize_text_field($_POST['shortcut']);
             $automation = new AI_Task_Automation();
@@ -176,6 +186,7 @@ class AI_Admin_Boost {
     }
 
     public function ajax_get_draft_posts() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $args = [
                 'post_status' => 'draft',
@@ -200,8 +211,8 @@ class AI_Admin_Boost {
     }
 
     public function ajax_schedule_post() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
-            // Check if schedules array is provided (for multiple posts)
             if (isset($_POST['schedules']) && is_array($_POST['schedules'])) {
                 $schedules = $_POST['schedules'];
                 $results = [];
@@ -233,6 +244,7 @@ class AI_Admin_Boost {
                         'ID' => $post_id,
                         'post_status' => 'future',
                         'post_date' => $datetime,
+                        'post_date_gmt' => get_gmt_from_date($datetime),
                         'edit_date' => true,
                     ]);
 
@@ -240,7 +252,7 @@ class AI_Admin_Boost {
                         error_log("Post $post_id scheduled for $datetime");
                         $results[] = [
                             'post_id' => $post_id,
-                            'post_title' => $post->post_title,
+                            'post_title' => $post-> post_title,
                             'datetime' => $datetime,
                             'success' => true,
                             'message' => "Post '$post->post_title' scheduled for $datetime."
@@ -256,7 +268,6 @@ class AI_Admin_Boost {
 
                 wp_send_json(['success' => true, 'results' => $results]);
             } else {
-                // Fallback for single post (backward compatibility)
                 $post_id = intval($_POST['post_id']);
                 $datetime = sanitize_text_field($_POST['datetime']);
 
@@ -269,6 +280,7 @@ class AI_Admin_Boost {
                     'ID' => $post_id,
                     'post_status' => 'future',
                     'post_date' => $datetime,
+                    'post_date_gmt' => get_gmt_from_date($datetime),
                     'edit_date' => true,
                 ]);
 
@@ -286,6 +298,7 @@ class AI_Admin_Boost {
     }
 
     public function ajax_generate_meta_description() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $post_id = intval($_POST['post_id'] ?? 0);
             if (!$post_id) {
@@ -311,6 +324,7 @@ class AI_Admin_Boost {
     }
 
     public function ajax_analyze_content() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
         try {
             $post_id = intval($_POST['post_id'] ?? 0);
             if (!$post_id) {
@@ -334,7 +348,78 @@ class AI_Admin_Boost {
             wp_send_json_error(['message' => 'Failed to analyze content: ' . $e->getMessage()]);
         }
     }
+
+    public function ajax_get_scheduled_posts() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
+        try {
+            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+            $per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 5;
+
+            $args = [
+                'post_status' => 'future',
+                'posts_per_page' => $per_page,
+                'paged' => $page,
+            ];
+            $posts = get_posts($args);
+            $total_posts = wp_count_posts('post', 'future')->future;
+
+            $response = [
+                'success' => true,
+                'posts' => array_map(function($post) {
+                    return [
+                        'ID' => $post->ID,
+                        'post_title' => $post->post_title,
+                        'schedule_date' => get_the_date('Y-m-d H:i', $post->ID),
+                    ];
+                }, $posts),
+                'has_more' => ($page * $per_page) < $total_posts,
+            ];
+
+            wp_send_json($response);
+        } catch (Exception $e) {
+            error_log("AJAX Get Scheduled Posts Error: " . $e->getMessage());
+            wp_send_json(['success' => false, 'message' => 'Failed to load scheduled posts: ' . $e->getMessage()]);
+        }
+    }
+
+    public function ajax_bulk_update_post_dates() {
+        check_ajax_referer('ai_admin_boost_nonce', 'nonce');
+        try {
+            $updates = isset($_POST['updates']) && is_array($_POST['updates']) ? $_POST['updates'] : [];
+            if (empty($updates)) {
+                wp_send_json_error(['message' => 'No updates provided']);
+                return;
+            }
+
+            $updated = 0;
+            foreach ($updates as $update) {
+                $post_id = intval($update['post_id'] ?? 0);
+                $new_date = sanitize_text_field($update['new_date'] ?? '');
+
+                if (!$post_id || !$new_date) {
+                    continue;
+                }
+
+                $post = [
+                    'ID' => $post_id,
+                    'post_date' => $new_date,
+                    'post_date_gmt' => get_gmt_from_date($new_date),
+                    'edit_date' => true,
+                ];
+
+                if (wp_update_post($post) !== 0) { // Check if update was successful
+                    $updated++;
+                }
+            }
+
+            wp_send_json_success(['updated' => $updated]);
+        } catch (Exception $e) {
+            error_log("AJAX Bulk Update Post Dates Error: " . $e->getMessage());
+            wp_send_json_error(['message' => 'Failed to update post dates: ' . $e->getMessage()]);
+        }
+    }
 }
+
 register_activation_hook(__FILE__, ['AI_Admin_Boost', 'activate']);
 new AI_Admin_Boost();
 
