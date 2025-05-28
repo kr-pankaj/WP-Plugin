@@ -6,13 +6,17 @@ class AI_SEO_Suggestions {
 
     public function __construct() {
         $options = get_option('ai_admin_boost_settings', []);
-        $model = $options['model'] ?? 'openai';
-        $api_key = $options[$model . '_key'] ?? '';
-        if (empty(AI_Admin_Boost_Encryption::decrypt($api_key))) {
-            error_log("AI_SEO_Suggestions: No valid API key for model $model");
-            throw new Exception("No valid API key provided for the selected AI model.");
-        }
-        $this->ai_provider = new AI_Provider($model, $api_key);
+		$model = $options['model'] ?? 'openai';
+
+		// Get and decrypt the API key
+		$encrypted_key = $options[$model . '_key'] ?? '';
+		$api_key = AI_Admin_Boost_Encryption::decrypt($encrypted_key);
+
+		if (empty($api_key)) {
+			error_log("AI_Content_Ideation: No decrypted API key provided for model $model");
+			throw new Exception("No API key provided for the selected AI model.");
+		}
+		$this->ai_provider = new AI_Provider($model, $api_key);
     }
 
     public function suggest_seo($content) {

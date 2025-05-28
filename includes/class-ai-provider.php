@@ -7,7 +7,7 @@ class AI_Provider {
 
     public function __construct($model, $apiKey) {
         $this->model = $model;
-        $this->apiKey = AI_Admin_Boost_Encryption::decrypt($apiKey);
+        $this->apiKey = $apiKey;
     }
 
     public function generate_text($prompt, $max_tokens = 150) {
@@ -51,7 +51,7 @@ class AI_Provider {
                 'contents' => [
                     [
                         'parts' => [
-                            ['text' => $prompt]
+                            ['text' => $prompt.'if topic is in hindi then your response should be in hindi.']
                         ]
                     ]
                 ],
